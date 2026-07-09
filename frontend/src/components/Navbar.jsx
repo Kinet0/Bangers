@@ -98,12 +98,12 @@ const styles = {
   },
   actions: {
     display: 'flex',
-    align-items: 'center',
+    alignItems: 'center',
     gap: '20px',
   },
   iconLink: {
     display: 'flex',
-    align-items: 'center',
+    alignItems: 'center',
     gap: '6px',
     color: 'var(--text-primary)',
   },
@@ -117,7 +117,7 @@ const styles = {
     position: 'relative',
     color: 'var(--text-primary)',
     display: 'flex',
-    align-items: 'center',
+    alignItems: 'center',
   },
   badge: {
     position: 'absolute',
@@ -131,12 +131,12 @@ const styles = {
     width: '18px',
     height: '18px',
     display: 'flex',
-    align-items: 'center',
-    justify-content: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   userMenu: {
     display: 'flex',
-    align-items: 'center',
+    alignItems: 'center',
     gap: '12px',
   },
   userLabel: {
@@ -146,12 +146,12 @@ const styles = {
   logoutBtn: {
     color: 'var(--text-muted)',
     display: 'flex',
-    align-items: 'center',
+    alignItems: 'center',
     transition: 'var(--transition-smooth)',
   },
   loginLink: {
     display: 'flex',
-    align-items: 'center',
+    alignItems: 'center',
     gap: '8px',
     color: 'var(--text-primary)',
   },

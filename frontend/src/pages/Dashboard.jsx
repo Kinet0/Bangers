@@ -504,8 +504,4 @@ const styles = {
     color: 'var(--text-secondary)',
   }
 };
-@media (max-width: 768px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-}
+
