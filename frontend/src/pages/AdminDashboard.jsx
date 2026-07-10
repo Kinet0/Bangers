@@ -18,9 +18,7 @@ export default function AdminDashboard() {
   const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
   const [coupons, setCoupons] = useState([]);
-  const [employees, setEmployees] = useState([
-    { id: 'mock-admin-id', first_name: 'Alex', last_name: 'Storey', role: 'admin' }
-  ]);
+  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Forms
@@ -66,6 +64,10 @@ export default function AdminDashboard() {
       // 5. Fetch coupons
       const copRes = await fetch(`${API_URL}/api/orders/coupons`, { headers: getAuthHeaders() });
       if (copRes.ok) setCoupons(await copRes.json());
+
+      // 6. Fetch staff accounts
+      const staffRes = await fetch(`${API_URL}/api/auth/staff`, { headers: getAuthHeaders() });
+      if (staffRes.ok) setEmployees(await staffRes.json());
 
     } catch (err) {
       console.error('Error fetching admin details:', err);
@@ -177,17 +179,35 @@ export default function AdminDashboard() {
   };
 
   // Employee Operations
-  const handleEmployeeSubmit = (e) => {
+  const handleEmployeeSubmit = async (e) => {
     e.preventDefault();
-    const newEmp = {
-      id: 'mock-emp-' + Math.random().toString(36).substr(2, 5),
-      first_name: employeeForm.first_name,
-      last_name: employeeForm.last_name,
-      role: employeeForm.role
-    };
-    setEmployees(prev => [...prev, newEmp]);
-    setShowEmployeeForm(false);
-    setEmployeeForm({ first_name: '', last_name: '', email: '', password: '', role: 'manager' });
+    try {
+      const res = await fetch(`${API_URL}/api/auth/staff`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          ...employeeForm,
+          password: employeeForm.password || 'TempPass123!'
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create staff account');
+
+      const newEmp = {
+        id: data.user.id,
+        first_name: data.user.firstName || employeeForm.first_name,
+        last_name: data.user.lastName || employeeForm.last_name,
+        role: data.user.role
+      };
+
+      setEmployees(prev => [newEmp, ...prev]);
+      setShowEmployeeForm(false);
+      setEmployeeForm({ first_name: '', last_name: '', email: '', password: '', role: 'manager' });
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Unable to create staff account');
+    }
   };
 
   if (!isManager) return null;

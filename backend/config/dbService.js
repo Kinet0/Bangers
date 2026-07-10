@@ -174,6 +174,16 @@ export const dbService = {
     }
   },
 
+  async getProfiles() {
+    if (dbMode === 'supabase') {
+      const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    } else {
+      return mockProfiles.map(profile => ({ ...profile }));
+    }
+  },
+
   async createProfile(profileData) {
     if (dbMode === 'supabase') {
       const { data, error } = await supabaseAdmin.from('profiles').insert([profileData]).select().single();

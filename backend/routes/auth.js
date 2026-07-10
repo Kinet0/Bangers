@@ -1,7 +1,7 @@
 import express from 'express';
 import { supabase, dbMode } from '../config/db.js';
 import { dbService } from '../config/dbService.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -142,6 +142,81 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server login error' });
+  }
+});
+
+// GET /api/auth/staff - List staff accounts (admin only)
+router.get('/staff', requireAuth, requireRole(['admin']), async (req, res) => {
+  try {
+    const profiles = await dbService.getProfiles();
+    const staffProfiles = profiles.filter(profile => profile.role && ['manager', 'admin'].includes(profile.role));
+    res.json(staffProfiles);
+  } catch (error) {
+    console.error('Staff listing error:', error);
+    res.status(500).json({ error: 'Failed to fetch staff accounts' });
+  }
+});
+
+// POST /api/auth/staff - Create a staff account (admin only)
+router.post('/staff', requireAuth, requireRole(['admin']), async (req, res) => {
+  try {
+    const { email, password, first_name, last_name, phone, role = 'manager' } = req.body;
+
+    if (!email || !password || !first_name || !last_name) {
+      return res.status(400).json({ error: 'Email, password, first name, and last name are required' });
+    }
+
+    const normalizedRole = role === 'admin' ? 'admin' : 'manager';
+
+    if (dbMode === 'supabase') {
+      const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
+
+      if (authError || !authData.user) {
+        return res.status(400).json({ error: authError?.message || 'Staff sign-up failed' });
+      }
+
+      const profile = await dbService.createProfile({
+        id: authData.user.id,
+        first_name,
+        last_name,
+        phone,
+        role: normalizedRole
+      });
+
+      res.status(201).json({
+        message: 'Staff account created successfully',
+        user: {
+          id: authData.user.id,
+          email: authData.user.email,
+          role: profile.role,
+          firstName: profile.first_name,
+          lastName: profile.last_name
+        }
+      });
+    } else {
+      const mockUserId = 'mock-staff-' + Math.random().toString(36).substr(2, 9);
+      const profile = await dbService.createProfile({
+        id: mockUserId,
+        first_name,
+        last_name,
+        phone,
+        role: normalizedRole
+      });
+
+      res.status(201).json({
+        message: 'Staff account created successfully (MOCK MODE)',
+        user: {
+          id: mockUserId,
+          email,
+          role: profile.role,
+          firstName: profile.first_name,
+          lastName: profile.last_name
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Staff account creation error:', error);
+    res.status(500).json({ error: 'Failed to create staff account' });
   }
 });
 
