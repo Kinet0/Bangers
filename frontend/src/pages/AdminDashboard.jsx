@@ -67,7 +67,16 @@ export default function AdminDashboard() {
 
       // 6. Fetch staff accounts
       const staffRes = await fetch(`${API_URL}/api/auth/staff`, { headers: getAuthHeaders() });
-      if (staffRes.ok) setEmployees(await staffRes.json());
+      if (staffRes.ok) {
+        const staffData = await staffRes.json();
+        const normalizedStaff = Array.isArray(staffData) ? staffData : (staffData?.value || []);
+        setEmployees(normalizedStaff.map(person => ({
+          id: person.id,
+          first_name: person.first_name || person.firstName || '',
+          last_name: person.last_name || person.lastName || '',
+          role: person.role || 'manager'
+        })));
+      }
 
     } catch (err) {
       console.error('Error fetching admin details:', err);
@@ -198,7 +207,7 @@ export default function AdminDashboard() {
         id: data.user.id,
         first_name: data.user.firstName || employeeForm.first_name,
         last_name: data.user.lastName || employeeForm.last_name,
-        role: data.user.role
+        role: data.user.role || employeeForm.role
       };
 
       setEmployees(prev => [newEmp, ...prev]);
